@@ -7,6 +7,8 @@ const Listing = require("./models/listing.js");
 const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/expressError.js");
+const expressError = require("./utils/expressError.js");
+const { listingSchema } = require("./schema.js");
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -44,6 +46,19 @@ app.get("/", (req, res) => {
   res.send("Hi, I am root");
 });
 
+// schema middleware
+const validateListing = (req, res, next) => {
+   let {error} = listingSchema.validate(req.body);
+  
+  if (error) {
+    let errMsg = error.details.map((el) => el.message).join(",");
+      throw new expressError(404,error)
+  }
+    else {
+      next();
+  }
+}
+
 // Index Route
 app.get(
   "/listings",
@@ -70,9 +85,10 @@ app.get(
 
 // Create Route
 app.post(
-  "/listings",
+  "/listings",validateListing,
   wrapAsync(async (req, res) => {
-    const newListings = new Listing(req.body.listing);
+   const newListings = new Listing(req.body.listing);
+   
     await newListings.save();
     res.redirect("/listings");
   })
@@ -90,7 +106,7 @@ app.get(
 
 // Update Route
 app.put(
-  "/listings/:id",
+  "/listings/:id",validateListing,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     await Listing.findByIdAndUpdate(id, { ...req.body.listing });
@@ -126,8 +142,10 @@ app.all("*", (req, res, next) => {
 
 // Error Handler Middleware
 app.use((err, req, res, next) => {
+  console.error("Error occurred:", err);
+  console.error("Stack trace:", err.stack);
   let { statusCode = 500, message = "Something went wrong" } = err;
-  res.status(statusCode).send(message);
+  res.status(statusCode).render("listings/error.ejs", { err });
 });
 
 // Server
