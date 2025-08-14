@@ -9,6 +9,8 @@ const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/expressError.js");
 const expressError = require("./utils/expressError.js");
 const { listingSchema } = require("./schema.js");
+const { reviewSchema } = require("./schema.js");
+const Review = require("./models/review.js");
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -48,14 +50,28 @@ app.get("/", (req, res) => {
 
 // schema middleware
 const validateListing = (req, res, next) => {
-   let {error} = listingSchema.validate(req.body);
-  
+  let { error } = listingSchema.validate(req.body);
+
   if (error) {
     let errMsg = error.details.map((el) => el.message).join(",");
-      throw new expressError(404,error)
+    throw new expressError(404, error)
   }
-    else {
-      next();
+  else {
+    next();
+  }
+};
+
+//  review Schema validation 
+// schema middleware
+const validateReview = (req, res, next) => {
+  let { error } = reviewSchema.validate(req.body);
+
+  if (error) {
+    let errMsg = error.details.map((el) => el.message).join(",");
+    throw new expressError(404, error)
+  }
+  else {
+    next();
   }
 }
 
@@ -85,10 +101,10 @@ app.get(
 
 // Create Route
 app.post(
-  "/listings",validateListing,
+  "/listings", validateListing,
   wrapAsync(async (req, res) => {
-   const newListings = new Listing(req.body.listing);
-   
+    const newListings = new Listing(req.body.listing);
+
     await newListings.save();
     res.redirect("/listings");
   })
@@ -106,7 +122,7 @@ app.get(
 
 // Update Route
 app.put(
-  "/listings/:id",validateListing,
+  "/listings/:id", validateListing,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     await Listing.findByIdAndUpdate(id, { ...req.body.listing });
@@ -123,6 +139,21 @@ app.delete(
     res.redirect("/listings");
   })
 );
+
+// reviews post route '
+app.post("/listings/:id/reviews",validateReview,wrapAsync( async (req, res) => {
+  let listing = await Listing.findById(req.params.id);
+  let newReview = new Review(req.body.review);
+  listing.reviews.push(newReview);
+ await newReview.save();
+  await listing.save();
+  console.log("new review saved ");
+  res.redirect(`/listings/${listing._id}`);
+
+}));
+
+
+
 // Privacy Policy Page
 app.get("/privacy", (req, res) => {
   res.render("static/privacy.ejs");
