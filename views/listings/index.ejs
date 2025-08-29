@@ -1,5 +1,5 @@
-<% layout("/layouts/boilerplate") -%>
-
+<% layout("/layouts/boilerplate")-%>
+<%=success%>
 
   <div class="text">
     <marquee behavior="alternate" direction="right">
@@ -11,7 +11,7 @@
     <% for (let listing of allListings) { %>
       <% if (listing && listing._id) { %>
         <a href="/listings/<%= listing._id %>" class="listing-link">
-          <div class="card">
+          <div class="card listing-card">
             <img src="<%= listing.image || '/placeholder.jpg' %>" class="card-img-top" alt="listing image" style="height:20rem">
             <div class="card-img-overlay"><b>Click to see details</b></div>
             <div class="card-body">

@@ -3,19 +3,18 @@ const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
 const methodOverride = require("method-override");
-const Listing = require("./models/listing.js");
 const ejsMate = require("ejs-mate");
-const wrapAsync = require("./utils/wrapAsync.js");
-const ExpressError = require("./utils/expressError.js");
-const expressError = require("./utils/expressError.js");
-const { listingSchema } = require("./schema.js");
-const { reviewSchema } = require("./schema.js");
-const Review = require("./models/review.js");
+const ExpressError = require("./utils/ExpressError.js");
+const cookieParser = require("cookie-parser");
+const listings = require("./routes/listing.js")
 
+const reviews=require("./routes/review.js")
+
+// express session 
+const session = require("express-session");
+// require flash 
+const flash = require("connect-flash");
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
-
-
-
 
 // MongoDB Connection
 main()
@@ -29,8 +28,19 @@ main()
 async function main() {
   await mongoose.connect(MONGO_URL);
 }
+//  express session --
+// app.get("/test", (req, res) => {
+//   res.send("test succesfull");
+//   if (req.cookies.count)
+//   {
+//     count++; res.send(count);
+//   }
+//   else {
+//     req.cookies.count = 1;
+//   }
+// });
 
-// EJS setup
+// // EJS setup
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -41,128 +51,64 @@ app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "/public")));
 
 
-
+// // using cookie parser
+// app.use(cookieParser("secretcode"));
 
 // Root Route
 app.get("/", (req, res) => {
+  // console.dir(req.cookies);
   res.send("Hi, I am root");
 });
+// app.get("/greet", (req, res) => {
+//   let { name = "anonymous" } = req.cookies;
+//   res.send(`hi ${name} `)
+// });
+// app.get("/getsignedcookies", (req, res) => {
+//   res.cookie("made-in", "India", { signed: true });
 
-// schema middleware
-const validateListing = (req, res, next) => {
-  let { error } = listingSchema.validate(req.body);
+//   res.send("signed cookie sent ");
+// });
 
-  if (error) {
-    let errMsg = error.details.map((el) => el.message).join(",");
-    throw new expressError(404, error)
-  }
-  else {
-    next();
-  }
+// //varify
+// app.get("/varify", (req, res) => {
+//   console.log(req.signedCookies);
+//   res.send(varified);
+// });
+
+
+// // sending cookies using res.cookies
+// app.get("/getcookies", (req, res) => {
+//   res.cookie("greet", "Namaste");
+//   res.cookie("origin", "india");
+//   res.send("sent you some cookies");
+// });
+// session options 
+const sessionOptions = {
+  secret: "mySuperSecretCodeString",
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    // day->hour->min->sec->miliseconds
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly:true
+  },
 };
+app.use(session(sessionOptions));
+app.use(flash());
 
-//  review Schema validation 
-// schema middleware
-const validateReview = (req, res, next) => {
-  let { error } = reviewSchema.validate(req.body);
 
-  if (error) {
-    let errMsg = error.details.map((el) => el.message).join(",");
-    throw new expressError(404, error)
-  }
-  else {
-    next();
-  }
-}
 
-// Index Route
-app.get(
-  "/listings",
-  wrapAsync(async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
-  })
-);
-
-// New Listing Form
-app.get("/listings/new", (req, res) => {
-  res.render("listings/new.ejs");
+// midlleware to store the messages
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
+  next();
 });
 
-// Show Route
-app.get(
-  "/listings/:id",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    const listing = await Listing.findById(id);
-    res.render("listings/show.ejs", { listing });
-  })
-);
 
-// Create Route
-app.post(
-  "/listings", validateListing,
-  wrapAsync(async (req, res) => {
-    const newListings = new Listing(req.body.listing);
+app.use("/listings", listings);
+app.use("/listings/:id/reviews", reviews);
 
-    await newListings.save();
-    res.redirect("/listings");
-  })
-);
-
-// Edit Form Route
-app.get(
-  "/listings/:id/edit",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    const listing = await Listing.findById(id);
-    res.render("listings/edit.ejs", { listing });
-  })
-);
-
-// Update Route
-app.put(
-  "/listings/:id", validateListing,
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    await Listing.findByIdAndUpdate(id, { ...req.body.listing });
-    res.redirect(`/listings/${id}`);
-  })
-);
-
-// Delete Route
-app.delete(
-  "/listings/:id",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    await Listing.findByIdAndDelete(id);
-    res.redirect("/listings");
-  })
-);
-
-// reviews post route '
-app.post("/listings/:id/reviews",validateReview,wrapAsync( async (req, res) => {
-  let listing = await Listing.findById(req.params.id);
-  let newReview = new Review(req.body.review);
-  listing.reviews.push(newReview);
- await newReview.save();
-  await listing.save();
-  console.log("new review saved ");
-  res.redirect(`/listings/${listing._id}`);
-
-}));
-
-
-
-// Privacy Policy Page
-app.get("/privacy", (req, res) => {
-  res.render("static/privacy.ejs");
-});
-
-// Terms & Conditions Page
-app.get("/terms", (req, res) => {
-  res.render("static/terms.ejs");
-});
 
 
 
@@ -183,3 +129,15 @@ app.use((err, req, res, next) => {
 app.listen(8080, () => {
   console.log("🚀 Server is listening on port 8080");
 });
+
+
+
+// Privacy Policy Page
+// app.get("/privacy", (req, res) => {
+//   res.render("static/privacy.ejs");
+// });
+
+// // Terms & Conditions Page
+// app.get("/terms", (req, res) => {
+//   res.render("static/terms.ejs");
+// });
