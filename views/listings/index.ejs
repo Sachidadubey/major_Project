@@ -1,5 +1,5 @@
 <% layout("/layouts/boilerplate")-%>
-<%=success%>
+
 
   <div class="text">
     <marquee behavior="alternate" direction="right">
@@ -12,7 +12,11 @@
       <% if (listing && listing._id) { %>
         <a href="/listings/<%= listing._id %>" class="listing-link">
           <div class="card listing-card">
-            <img src="<%= listing.image || '/placeholder.jpg' %>" class="card-img-top" alt="listing image" style="height:20rem">
+        <img src="<%= listing.image && listing.image.trim() !== '' ? listing.image : '/images/placeholder.jpg' %>"
+          class="card-img-top" alt="listing image" style="height:20rem">
+<!-- //its not working  -->
+
+
             <div class="card-img-overlay"><b>Click to see details</b></div>
             <div class="card-body">
               <p class="card-text">

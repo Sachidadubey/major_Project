@@ -1,0 +1,20 @@
+
+const { required } = require("joi");
+const passportLocalMongoose = require("passport-local-mongoose");
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+
+const userSchema = new Schema({
+
+  Email: {
+    type: String,
+    required: true,
+  },
+  // password: {
+  //   type: password,
+  //   required:true
+  // }
+});
+userSchema.plugin(passportLocalMongoose);
+module.exports = mongoose.model("user", userSchema);
+

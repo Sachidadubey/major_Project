@@ -6,14 +6,22 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
 const cookieParser = require("cookie-parser");
-const listings = require("./routes/listing.js")
+const listingsRouter = require("./routes/listing.js")
 
-const reviews=require("./routes/review.js")
+const reviewsRouter=require("./routes/review.js")
 
 // express session 
 const session = require("express-session");
 // require flash 
 const flash = require("connect-flash");
+// require passport
+const passport = require("passport");
+// require passport local
+const localStrategy = require("passport-local");
+// require user
+const user = require("./models/user.js");
+//reuire user router 
+const userRouter = require("./routes/user.js");
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
 // MongoDB Connection
@@ -48,17 +56,17 @@ app.set("views", path.join(__dirname, "views"));
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.use(express.static(path.join(__dirname, "/public")));
+app.use(express.static(path.join(__dirname, "public")));
 
 
 // // using cookie parser
 // app.use(cookieParser("secretcode"));
 
 // Root Route
-app.get("/", (req, res) => {
-  // console.dir(req.cookies);
-  res.send("Hi, I am root");
-});
+// app.get("/", (req, res) => {
+//   // console.dir(req.cookies);
+//   res.send("Hi, I am root");
+// });
 // app.get("/greet", (req, res) => {
 //   let { name = "anonymous" } = req.cookies;
 //   res.send(`hi ${name} `)
@@ -97,17 +105,39 @@ const sessionOptions = {
 app.use(session(sessionOptions));
 app.use(flash());
 
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new localStrategy(user.authenticate()));
+
+passport.serializeUser(user.serializeUser());
+passport.deserializeUser(user.deserializeUser());
 
 
-// midlleware to store the messages
+
+// midlleware to store the messages flash 
 app.use((req, res, next) => {
+  res.locals.currUser = req.user;
   res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
   next();
 });
 
 
-app.use("/listings", listings);
-app.use("/listings/:id/reviews", reviews);
+// app.get("/demouser", async (req, res) => {
+//   let fakeuser = new user({
+//       Email: "Dubeybba1234@gmail.com",
+//     username: "Aubeybaba",
+  
+//   });
+//   let registeredUser = await user.register(fakeuser, "dubeybaba");
+//   res.send(registeredUser);
+// });
+
+
+
+app.use("/listings", listingsRouter);
+app.use("/listings/:id/reviews", reviewsRouter);
+app.use("/", userRouter);
 
 
 
