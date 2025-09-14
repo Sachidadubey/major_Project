@@ -1,5 +1,5 @@
 const Listing = require("./models/listing");
-const ExpressError = require("./utils/ExpressError.js");
+const ExpressError = require("./utils/expressError.js");
 const { listingSchema } = require("./schema.js");
 const { reviewSchema } = require("./schema.js");
 const Review = require("./models/review.js");
