@@ -211,3 +211,8 @@ show.ejs */
   color: white !important;
 }
 
+#map {
+  
+height: 400px;
+  width: 70vh;
+}

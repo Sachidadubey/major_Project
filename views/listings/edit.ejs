@@ -19,7 +19,10 @@
             placeholder="enter description" ><%= listing.description %></textarea>
            <div class="invalid-feedback">enter a short description</div>
         </div>
-
+        <div class="mb-3">
+          <p>Original Image</p>
+          <img src="<%= originalImageUrl %>" alt="not working">
+        </div>
         <div class="mb-3">
           <label for="image" class="form-label">Upload Image</label>
           <input id="image" name="listing[image]" 

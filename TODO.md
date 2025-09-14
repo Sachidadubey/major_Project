@@ -1,0 +1,4 @@
+- [ ] Fix coordinates script in show.ejs to handle missing geometry
+- [ ] Fix unclosed <i> tag in show.ejs
+- [ ] Fix class typo in label in show.ejs
+- [ ] Fix cols-8 to col-8 in show.ejs
