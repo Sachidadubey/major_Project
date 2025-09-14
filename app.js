@@ -19,7 +19,7 @@ const multer = require("multer");
 const upload = multer({ storage });
 
 const wrapAsync = require("./utils/wrapAsync");
-const ExpressError = require("./utils/ExpressError");
+const ExpressError = require("./utils/expressError");
 const Listing = require("./models/listing");
 const User = require("./models/user");
 
@@ -109,8 +109,8 @@ app.all("*", (req, res, next) => {
 
 // ---------------- Error Handler ----------------
 app.use((err, req, res, next) => {
-  console.error("Error occurred:", err);
-  console.error("Stack trace:", err.stack);
+  // console.error("Error occurred:", err);
+  // console.error("Stack trace:", err.stack);
   const { statusCode = 500 } = err;
   res.status(statusCode).render("listings/error.ejs", { err });
 });
