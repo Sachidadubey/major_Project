@@ -36,8 +36,7 @@ main()
 
 async function main() {
   await mongoose.connect(dbUrl);
-   dbName: "test"
-  }
+}
 
 // ---------------- EJS Setup ----------------
 app.engine("ejs", ejsMate);
