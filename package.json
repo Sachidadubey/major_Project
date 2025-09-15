@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": "20"
+    "node": ">=20"
   },
   "name": "major_project",
   "version": "1.0.0",
@@ -14,6 +14,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "20": "^1.0.0",
     "@mapbox/mapbox-sdk": "^0.16.1",
     "bootstrap": "^5.3.7",
     "cloudinary": "^1.41.3",
@@ -28,7 +29,6 @@
     "express-session": "^1.18.2",
     "joi": "^18.0.0",
     "method-override": "^3.0.0",
-    "mongodb": "^6.19.0",
     "mongoose": "^8.17.0",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
